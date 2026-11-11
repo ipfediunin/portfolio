@@ -1,26 +1,144 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+/*
+ * Design tokens. `static` keeps every variable in the output even when no utility uses it:
+ * the PixiJS engine reads these colors at runtime (src/engine/theme/read-theme.ts).
+ */
+@theme static {
+  --font-sans: var(--font-manrope), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains-mono), ui-monospace, monospace;
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+  --color-bg: #f6f8fc;
+  --color-surface: #ffffff;
+  --color-ground: #eef2f8;
+  --color-road: #e4e9f2;
+  --color-road-mark: #ffffff;
+  --color-sidewalk: #f3f5f9;
+  --color-plate: #f9fafd;
+  --color-plate-side: #dfe5ef;
+  --color-grass: #dceee2;
+  --color-line: #e3e8f1;
+  --color-ink: #0d1530;
+  --color-ink-2: #3e4864;
+  --color-ink-3: #646e8a; /* 5.1:1 on white, 4.8:1 on the page background (WCAG AA) */
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+  --color-building-top: #f1f4fa;
+  --color-building-left: #dce3f0;
+  --color-building-right: #c7d1e5;
+  --color-glass: #3d5afe;
+  --color-glass-light: #7b93ff;
+  --color-glass-dim: #aab6da;
+  --color-tree: #8ccb9e;
+  --color-tree-dark: #5da97a;
+
+  --color-flow-sync: #22b8f0;
+  --color-flow-async: #8b5cf6;
+
+  --color-brand: #4f46e5;
+  --color-brand-2: #7c3aed;
+
+  --color-status-success: #10b981;
+  --color-status-processing: #3b82f6;
+  --color-status-queued: #8b5cf6;
+  --color-status-retry: #f59e0b;
+  --color-status-failed: #ef4444;
+  --color-status-cached: #06b6d4;
+
+  --shadow-card:
+    0 1px 2px rgb(13 21 48 / 0.04), 0 12px 32px -12px rgb(13 21 48 / 0.14);
+  --shadow-brand: 0 10px 28px -10px rgb(79 70 229 / 0.55);
+
+  --ease-ui: cubic-bezier(0.2, 0.8, 0.2, 1);
+
+  --animate-panel-in: panel-in 240ms var(--ease-ui);
+  @keyframes panel-in {
+    from {
+      opacity: 0;
+      transform: translateY(12px);
+    }
+  }
+
+  /*
+   * Case glance: played from the first paint (no script, no flash of the final state). `backwards`
+   * holds the start frame during the delay and lets go after the end, so a scroll reveal
+   * (features/cases/glance-motion.tsx) can hide the part again and play it with a transition.
+   */
+  --animate-rise-in: rise-in 600ms var(--ease-ui) backwards;
+  @keyframes rise-in {
+    from {
+      opacity: 0;
+      translate: 0 12px;
+    }
+  }
+  --animate-bar-grow: bar-grow 1000ms var(--ease-ui) backwards;
+  @keyframes bar-grow {
+    from {
+      clip-path: inset(0 100% 0 0);
+    }
   }
 }
 
+/*
+ * Desktops where a case page's glance strip starts folded: narrower than `xl` or shorter than
+ * 900px, where the strip would leave the world too little room. Mirrors ROOMY_QUERY in
+ * features/cases/case-stage.tsx.
+ */
+@custom-variant glance-folded {
+  @media (min-width: 1024px) and (max-width: 1279.98px) {
+    @slot;
+  }
+  @media (min-width: 1280px) and (max-height: 899.98px) {
+    @slot;
+  }
+}
+
+:root {
+  color-scheme: light;
+}
+
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-bg);
+  color: var(--color-ink);
+}
+
+::selection {
+  background: rgb(79 70 229 / 0.18);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-brand);
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+
+/*
+ * A disclosure that slides open: the height animates where `::details-content` and
+ * `interpolate-size` exist (elsewhere it opens at once), and the content rises in everywhere.
+ */
+.disclosure {
+  interpolate-size: allow-keywords;
+}
+.disclosure::details-content {
+  block-size: 0;
+  overflow-y: clip;
+  transition:
+    block-size 520ms var(--ease-ui),
+    content-visibility 520ms allow-discrete;
+}
+.disclosure[open]::details-content {
+  block-size: auto;
+}
+.disclosure[open] > :not(summary) {
+  animation: rise-in 600ms var(--ease-ui) 80ms backwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+  }
 }

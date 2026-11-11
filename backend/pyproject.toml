@@ -1,0 +1,152 @@
+[project]
+name = "runtime-city-backend"
+version = "0.1.0"
+description = "Live backend of Runtime City: Orders API (FastAPI), workers, realtime hub, back office (Django) and ops bot (Flask)"
+requires-python = ">=3.12"
+dependencies = []
+
+# One lockfile and one .venv for every service; each service keeps its own dependency list
+# and is built into its own Docker image (`uv sync --package <name>`).
+[tool.uv.workspace]
+members = ["libs/*", "services/*"]
+
+[dependency-groups]
+dev = [
+    "django-stubs>=6.1.2",
+    "httpx>=0.28.1",
+    "mypy>=2.4.1",
+    "psycopg[binary]>=3.3.8",
+    "pytest>=9.2.0",
+    "pytest-asyncio>=1.4.1.post1",
+    "ruff>=0.17.3",
+    "websockets>=17.0",
+]
+load = [
+    "locust>=2.47.0",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+src = [
+    "libs/contracts/src",
+    "libs/telemetry/src",
+    "libs/messaging/src",
+    "services/orders-api/src",
+    "services/order-worker/src",
+    "services/provider-stub/src",
+    "services/realtime-hub/src",
+    "services/ops-bot/src",
+    "services/backoffice/src",
+    "testing",
+]
+
+[tool.ruff.lint]
+select = [
+    "E", "W", "F", "I", "N", "UP", "B", "A", "C4", "SIM", "RUF", "S", "ASYNC", "PT", "DTZ",
+    "T20", "PIE", "RET", "PTH", "TRY", "ERA", "PL",
+]
+ignore = [
+    "PLR0913",  # FastAPI handlers take their dependencies as parameters
+    "TRY003",   # short messages in HTTPException are the readable choice
+]
+
+[tool.ruff.lint.per-file-ignores]
+"**/tests/**" = ["S101", "PLR2004", "S105", "S106"]
+"testing/**" = ["S101", "PLR2004", "S105", "S106"]
+"conftest.py" = ["S101", "S105", "PLR2004"]
+# Django declares model options as class attributes (Meta.constraints, ordering, …).
+"**/models.py" = ["RUF012"]
+"**/migrations/**" = ["S608", "RUF012", "E501"]
+
+[tool.ruff.lint.isort]
+known-first-party = [
+    "backoffice",
+    "contracts",
+    "messaging",
+    "ops_bot",
+    "order_worker",
+    "orders_api",
+    "provider_stub",
+    "realtime_hub",
+    "telemetry",
+]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+plugins = ["pydantic.mypy", "mypy_django_plugin.main"]
+mypy_path = [
+    "libs/contracts/src",
+    "libs/telemetry/src",
+    "libs/messaging/src",
+    "services/orders-api/src",
+    "services/order-worker/src",
+    "services/provider-stub/src",
+    "services/realtime-hub/src",
+    "services/ops-bot/src",
+    "services/backoffice/src",
+    "testing",
+    "scripts",
+]
+explicit_package_bases = true
+files = [
+    "libs/contracts/src",
+    "libs/telemetry/src",
+    "libs/messaging/src",
+    "services/orders-api/src",
+    "services/order-worker/src",
+    "services/provider-stub/src",
+    "services/realtime-hub/src",
+    "services/ops-bot/src",
+    "services/backoffice/src",
+    "libs/contracts/tests",
+    "libs/telemetry/tests",
+    "libs/messaging/tests",
+    "services/orders-api/tests",
+    "services/order-worker/tests",
+    "services/provider-stub/tests",
+    "services/realtime-hub/tests",
+    "services/ops-bot/tests",
+    "services/backoffice/tests",
+    "testing",
+    "conftest.py",
+    "scripts",
+]
+
+# aiokafka ships no type information; only libs/messaging/kafka.py uses it and returns typed values.
+[[tool.mypy.overrides]]
+module = ["aiokafka", "aiokafka.*"]
+ignore_missing_imports = true
+
+[tool.django-stubs]
+django_settings_module = "backoffice.settings"
+
+[tool.pydantic-mypy]
+init_forbid_extra = true
+init_typed = true
+warn_required_dynamic_aliases = true
+
+[tool.pytest.ini_options]
+testpaths = [
+    "libs/contracts/tests",
+    "libs/telemetry/tests",
+    "libs/messaging/tests",
+    "services/orders-api/tests",
+    "services/order-worker/tests",
+    "services/provider-stub/tests",
+    "services/realtime-hub/tests",
+    "services/ops-bot/tests",
+    "services/backoffice/tests",
+]
+addopts = ["--import-mode=importlib", "--strict-markers"]
+# Test support (backend/testing) is imported by name from the test modules.
+pythonpath = [
+    "testing",
+]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+markers = [
+    "integration: needs PostgreSQL and Redis from compose.yaml (docker compose up -d postgres redis)",
+    "broker: also needs RabbitMQ (docker compose up -d postgres redis rabbitmq)",
+]

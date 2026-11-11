@@ -1,0 +1,31 @@
+## Problem
+
+Many processes repeat the same manual steps: data is taken from one system, checked, moved into another, and someone is told about the result. It is slow, mistakes surface late, and the state of the process is visible only to whoever runs it.
+
+## Solution
+
+Automation services in Python and Django: incoming data is checked at the entrance, queued through RabbitMQ and processed by workers; results are stored, people are notified, and every rejection and error is visible in a monitoring interface.
+
+## My role
+
+- Built automation services in Python and Django.
+- Integrated external APIs and the handling of incoming data and events.
+- Organised sequential and asynchronous operations through a RabbitMQ task queue.
+- Implemented input validation, error handling and logging of task execution.
+- Organised storing the results in a database.
+- Built monitoring and management interfaces.
+
+## Technical architecture
+
+Data source → Django API → validation → task queue → processing → storing the result → notification. The queue separates receiving data from processing it: the source gets its answer at once, and workers run the tasks at their own pace.
+
+## Implementation
+
+- **Checks at the entrance.** Invalid records are rejected before they are queued, and the reason is recorded for each.
+- **Isolated failures.** A failure in one task does not stop the others: the task is marked as failed and the error goes to the log.
+- **Observability.** Progress, rejections and errors are visible in the monitoring interface, not only in server logs.
+- **Integrations as separate steps.** Calls to external services are steps of their own, so an outage on their side does not break data intake.
+
+## Functional outcome
+
+Processes that used to be done by hand run automatically: data from several sources is checked, processed and stored, results are passed on, and rejections and errors show up in monitoring together with their reasons.

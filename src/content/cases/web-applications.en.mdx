@@ -1,0 +1,31 @@
+## Problem
+
+A client needs neither a bare API nor a set of pages, but a working product: an interface where users take actions, server-side logic that handles them, and data that is stored reliably. All the parts have to fit together.
+
+## Solution
+
+Applications designed as one product: a React / Next.js interface for the user's actions and instant feedback, a Python backend — Django, FastAPI or Flask — that checks data and applies the rules, and a database that keeps the result.
+
+## My role
+
+- Designed the structure of the applications.
+- Built the frontend with React and Next.js.
+- Built the server-side logic and APIs in Python — with Django, FastAPI or Flask depending on the project.
+- Integrated the applications with databases.
+- Implemented user forms and data validation.
+- Built responsive interfaces and optimised the interaction between client and server.
+
+## Technical architecture
+
+UI → request → backend → business logic → database → response → UI. The interface is responsible for convenience and instant feedback, the backend for checking data and applying rules, the database for keeping the data safe.
+
+## Implementation
+
+- **Validation on both sides.** The browser checks input at once, so an obviously wrong request is never sent; the server checks again, because a request can bypass the form.
+- **The server is the source of truth.** State in the interface can go stale. Conflicts, such as a time slot that is already taken, are decided by the server, which returns a clear answer.
+- **Transactions.** Related data changes happen together or not at all.
+- **Responsiveness.** The interfaces work across screen sizes.
+
+## Functional outcome
+
+Finished web applications where the interface, the server-side logic and the data work as one: a user takes an action, and the system checks it, applies the rules and stores the result.

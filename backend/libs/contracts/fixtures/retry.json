@@ -1,0 +1,242 @@
+{
+  "scenario": "retry",
+  "request": {
+    "method": "POST",
+    "path": "/api/orders/42/pay",
+    "authorized": true,
+    "body": {
+      "order_id": 42,
+      "amount": 129.9,
+      "currency": "EUR"
+    },
+    "failAttempts": 2
+  },
+  "response": {
+    "status": 202,
+    "statusText": "Accepted",
+    "headers": {
+      "content-type": "application/json",
+      "x-trace-id": "5b67c7ff90ee8d0dca0e73b97f1d9aa7",
+      "x-ratelimit-limit": "5",
+      "x-ratelimit-remaining": "4",
+      "location": "/api/tasks/c6a26a6e-6db7-4193-b104-828a92ae5562",
+      "server-timing": "rate_limit;dur=0.279;desc=\"EVALSHA token_buckets (client, ip)\", auth;dur=0.155;desc=\"GET sandbox:<token sha256>\", validate;dur=0.047;desc=\"PaymentIn.model_validate_json\", handle;dur=0.043;desc=\"POST /api/orders/{id}/pay\", db;dur=6.313;desc=\"WITH target AS ( SELECT id, total_cents, currency FROM orders.orders WHERE id = \", publish;dur=11.132;desc=\"basic.publish jobs -> jobs.payments (confirm)\", total;dur=19.416"
+    },
+    "body": {
+      "task_id": "c6a26a6e-6db7-4193-b104-828a92ae5562",
+      "status": "queued"
+    }
+  },
+  "roundTripMs": 21.48,
+  "trace": {
+    "trace_id": "5b67c7ff90ee8d0dca0e73b97f1d9aa7",
+    "method": "POST",
+    "path": "/api/orders/42/pay",
+    "status": 202,
+    "duration_ms": 19.416,
+    "spans": [
+      {
+        "kind": "rate_limit",
+        "name": "EVALSHA token_buckets (client, ip)",
+        "service": "orders-api",
+        "start_ms": 0.968,
+        "duration_ms": 0.279,
+        "ok": true,
+        "attributes": {
+          "remaining": 4
+        }
+      },
+      {
+        "kind": "auth",
+        "name": "GET sandbox:<token sha256>",
+        "service": "orders-api",
+        "start_ms": 1.303,
+        "duration_ms": 0.155,
+        "ok": true,
+        "attributes": {
+          "token": "valid"
+        }
+      },
+      {
+        "kind": "validate",
+        "name": "PaymentIn.model_validate_json",
+        "service": "orders-api",
+        "start_ms": 1.569,
+        "duration_ms": 0.047,
+        "ok": true,
+        "attributes": {}
+      },
+      {
+        "kind": "handle",
+        "name": "POST /api/orders/{id}/pay",
+        "service": "orders-api",
+        "start_ms": 1.624,
+        "duration_ms": 0.043,
+        "ok": true,
+        "attributes": {}
+      },
+      {
+        "kind": "db",
+        "name": "WITH target AS ( SELECT id, total_cents, currency FROM orders.orders WHERE id = :order_id AND (owner_key IS NULL OR owner_key = :owner) ), created AS ( INSERT INTO orders.tasks (id, kind, owner_key, o",
+        "service": "orders-api",
+        "start_ms": 1.832,
+        "duration_ms": 6.313,
+        "ok": true,
+        "attributes": {}
+      },
+      {
+        "kind": "publish",
+        "name": "basic.publish jobs -> jobs.payments (confirm)",
+        "service": "orders-api",
+        "start_ms": 8.195,
+        "duration_ms": 11.132,
+        "ok": true,
+        "attributes": {
+          "queue": "jobs.payments"
+        }
+      }
+    ],
+    "background": {
+      "state": "done",
+      "spans": [
+        {
+          "kind": "consume",
+          "name": "consume jobs.payments attempt 1/3",
+          "service": "order-worker",
+          "start_ms": 19.707,
+          "duration_ms": 0.006,
+          "ok": true,
+          "attributes": {
+            "attempt": 1,
+            "max_attempts": 3,
+            "queued_ms": 18.1,
+            "worker": "cfd937549d54",
+            "redelivered": false
+          }
+        },
+        {
+          "kind": "external",
+          "name": "POST /v1/charges",
+          "service": "order-worker",
+          "start_ms": 20.164,
+          "duration_ms": 3.042,
+          "ok": false,
+          "attributes": {
+            "status": 503
+          }
+        },
+        {
+          "kind": "retry",
+          "name": "basic.publish jobs.payments.retry.1000ms (confirm)",
+          "service": "order-worker",
+          "start_ms": 23.245,
+          "duration_ms": 10.799,
+          "ok": true,
+          "attributes": {
+            "delay_ms": 1000,
+            "next_attempt": 2,
+            "reason": "the provider answered 503"
+          }
+        },
+        {
+          "kind": "consume",
+          "name": "consume jobs.payments attempt 2/3",
+          "service": "order-worker",
+          "start_ms": 1045.677,
+          "duration_ms": 0.008,
+          "ok": true,
+          "attributes": {
+            "attempt": 2,
+            "max_attempts": 3,
+            "queued_ms": 1022.4,
+            "worker": "cccefb3a28e6",
+            "redelivered": false
+          }
+        },
+        {
+          "kind": "external",
+          "name": "POST /v1/charges",
+          "service": "order-worker",
+          "start_ms": 1046.196,
+          "duration_ms": 3.033,
+          "ok": false,
+          "attributes": {
+            "status": 503
+          }
+        },
+        {
+          "kind": "retry",
+          "name": "basic.publish jobs.payments.retry.2000ms (confirm)",
+          "service": "order-worker",
+          "start_ms": 1049.271,
+          "duration_ms": 11.564,
+          "ok": true,
+          "attributes": {
+            "delay_ms": 2000,
+            "next_attempt": 3,
+            "reason": "the provider answered 503"
+          }
+        },
+        {
+          "kind": "consume",
+          "name": "consume jobs.payments attempt 3/3",
+          "service": "order-worker",
+          "start_ms": 3072.715,
+          "duration_ms": 0.008,
+          "ok": true,
+          "attributes": {
+            "attempt": 3,
+            "max_attempts": 3,
+            "queued_ms": 2023.4,
+            "worker": "cfd937549d54",
+            "redelivered": false
+          }
+        },
+        {
+          "kind": "external",
+          "name": "POST /v1/charges",
+          "service": "order-worker",
+          "start_ms": 3073.124,
+          "duration_ms": 1.642,
+          "ok": true,
+          "attributes": {
+            "status": 201
+          }
+        },
+        {
+          "kind": "db",
+          "name": "UPDATE orders.tasks SET status = :status, attempts = :attempts, result = CAST(:result AS jsonb), error = :error, updated_at = now() WHERE id = :id AND status = 'queued'",
+          "service": "order-worker",
+          "start_ms": 3074.909,
+          "duration_ms": 4.749,
+          "ok": true,
+          "attributes": {}
+        },
+        {
+          "kind": "notify",
+          "name": "EVALSHA notify_once (RPUSH notifications:<client> \u00b7 PUBLISH events:<client>)",
+          "service": "order-worker",
+          "start_ms": 3079.776,
+          "duration_ms": 0.296,
+          "ok": true,
+          "attributes": {
+            "event": "payment.succeeded"
+          }
+        },
+        {
+          "kind": "push",
+          "name": "ws.send payment.succeeded",
+          "service": "realtime-hub",
+          "start_ms": 3080.254,
+          "duration_ms": 0.01,
+          "ok": true,
+          "attributes": {
+            "event": "payment.succeeded",
+            "connections": 1,
+            "hub": "b6de5dd580ea"
+          }
+        }
+      ]
+    }
+  }
+}

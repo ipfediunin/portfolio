@@ -1,0 +1,210 @@
+{
+  "kind": "chaos",
+  "measured_at": "2026-11-06T18:31:56+00:00",
+  "environment": {
+    "machine": {
+      "cpu": "AMD Ryzen 5 7500F 6-Core Processor",
+      "logical_cpus": 12,
+      "memory_gb": 31.6,
+      "os": "Windows-11"
+    },
+    "docker": {
+      "engine": "Docker Desktop 29.2.1",
+      "cpus": 12,
+      "memory_gb": 15.4
+    },
+    "load_generator": "the experiments' requests come from the same machine",
+    "limits": [
+      {
+        "service": "edge",
+        "replicas": 1,
+        "cpus": 0.5,
+        "memory_mb": 128
+      },
+      {
+        "service": "kafka",
+        "replicas": 1,
+        "cpus": null,
+        "memory_mb": 768
+      },
+      {
+        "service": "ops-bot",
+        "replicas": 1,
+        "cpus": 0.25,
+        "memory_mb": 128
+      },
+      {
+        "service": "ops-bot-run",
+        "replicas": 1,
+        "cpus": 0.25,
+        "memory_mb": 128
+      },
+      {
+        "service": "order-worker",
+        "replicas": 2,
+        "cpus": 0.5,
+        "memory_mb": 192
+      },
+      {
+        "service": "orders-api",
+        "replicas": 1,
+        "cpus": 1.0,
+        "memory_mb": 256
+      },
+      {
+        "service": "outbox-relay",
+        "replicas": 1,
+        "cpus": 0.25,
+        "memory_mb": 128
+      },
+      {
+        "service": "payments",
+        "replicas": 1,
+        "cpus": 0.5,
+        "memory_mb": 256
+      },
+      {
+        "service": "payments-sweeper",
+        "replicas": 1,
+        "cpus": 0.1,
+        "memory_mb": 128
+      },
+      {
+        "service": "postgres",
+        "replicas": 1,
+        "cpus": null,
+        "memory_mb": null
+      },
+      {
+        "service": "provider-stub",
+        "replicas": 1,
+        "cpus": 0.25,
+        "memory_mb": 128
+      },
+      {
+        "service": "rabbitmq",
+        "replicas": 1,
+        "cpus": null,
+        "memory_mb": 512
+      },
+      {
+        "service": "realtime-hub",
+        "replicas": 2,
+        "cpus": 0.25,
+        "memory_mb": 128
+      },
+      {
+        "service": "redis",
+        "replicas": 1,
+        "cpus": null,
+        "memory_mb": null
+      }
+    ]
+  },
+  "experiments": [
+    {
+      "id": "worker-killed",
+      "title": "A worker dies in the middle of payments",
+      "fault": "100 payments whose first provider call fails; while both order-worker replicas work through them, one is killed (SIGKILL)",
+      "hypothesis": "No payment is lost and none is charged twice: RabbitMQ redelivers the unacknowledged jobs to the other replica, and the provider gets the task id as its idempotency key.",
+      "passed": true,
+      "observations": [
+        {
+          "label": "Payments finished",
+          "value": "100 of 100 succeeded"
+        },
+        {
+          "label": "Charges at the provider",
+          "value": "100 charge ids for 100 payments: none charged twice"
+        },
+        {
+          "label": "Redelivered to the other worker",
+          "value": "1 job(s) the killed worker held unacknowledged"
+        },
+        {
+          "label": "All done after the kill",
+          "value": "1.1 s"
+        }
+      ]
+    },
+    {
+      "id": "kafka-down",
+      "title": "Kafka is down while orders come in",
+      "fault": "Kafka stopped; 10 orders created; Kafka started again",
+      "hypothesis": "Orders are still accepted at full speed: each event waits in the outbox, in the same transaction as its order, and every consumer group catches up once Kafka is back.",
+      "passed": true,
+      "observations": [
+        {
+          "label": "Orders accepted while Kafka was down",
+          "value": "10 of 10 (201), median 8 ms"
+        },
+        {
+          "label": "Events waiting in the outbox",
+          "value": "10"
+        },
+        {
+          "label": "Every consumer group caught up after Kafka was back",
+          "value": "16.0 s: 10 reserved, counted and notified"
+        }
+      ]
+    },
+    {
+      "id": "rabbitmq-down",
+      "title": "RabbitMQ is down",
+      "fault": "RabbitMQ stopped, then started again",
+      "hypothesis": "Only queued work is refused, with 503 and Retry-After; reads and orders keep working; once RabbitMQ is back the API and the workers reconnect by themselves.",
+      "passed": true,
+      "observations": [
+        {
+          "label": "A new job while RabbitMQ is down",
+          "value": "503, Retry-After 5 s"
+        },
+        {
+          "label": "Everything that needs no queue",
+          "value": "reads 200, orders 201"
+        },
+        {
+          "label": "Jobs accepted again, without a restart",
+          "value": "after 9.1 s"
+        },
+        {
+          "label": "That job done by a reconnected worker",
+          "value": "0.0 s later"
+        }
+      ]
+    },
+    {
+      "id": "redis-down",
+      "title": "Redis is down",
+      "fault": "Redis stopped, then started again",
+      "hypothesis": "The API fails fast and honestly (503 with Retry-After, readiness down) instead of erroring or hanging, and serves again as soon as Redis is back.",
+      "passed": true,
+      "observations": [
+        {
+          "label": "A request while Redis is down",
+          "value": "503, Retry-After 5, in 545 ms"
+        },
+        {
+          "label": "Readiness",
+          "value": "503: redis unavailable: TimeoutError"
+        },
+        {
+          "label": "Serving again, without a restart",
+          "value": "after 2.4 s"
+        },
+        {
+          "label": "A sandbox from before the restart",
+          "value": "401: gone with Redis, as designed (nothing personal is kept)"
+        },
+        {
+          "label": "Realtime hub subscribed again",
+          "value": "after 0.9 s"
+        },
+        {
+          "label": "An order right after the restart",
+          "value": "its trace completed in 0.5 s: every service reconnected"
+        }
+      ]
+    }
+  ]
+}

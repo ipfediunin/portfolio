@@ -1,0 +1,46 @@
+{
+  "scenario": "rate-limit",
+  "request": {
+    "method": "GET",
+    "path": "/api/products/7",
+    "authorized": true,
+    "body": null
+  },
+  "response": {
+    "status": 429,
+    "statusText": "Too Many Requests",
+    "headers": {
+      "content-type": "application/json",
+      "x-trace-id": "e2b5892c2f1e54e1ff0097e79c5202f4",
+      "retry-after": "2",
+      "x-ratelimit-limit": "5",
+      "x-ratelimit-remaining": "0",
+      "server-timing": "rate_limit;dur=0.268;desc=\"EVALSHA token_buckets (client, ip)\", total;dur=0.797"
+    },
+    "body": {
+      "detail": "Too Many Requests"
+    }
+  },
+  "roundTripMs": 2.49,
+  "trace": {
+    "trace_id": "e2b5892c2f1e54e1ff0097e79c5202f4",
+    "method": "GET",
+    "path": "/api/products/7",
+    "status": 429,
+    "duration_ms": 0.797,
+    "spans": [
+      {
+        "kind": "rate_limit",
+        "name": "EVALSHA token_buckets (client, ip)",
+        "service": "orders-api",
+        "start_ms": 0.463,
+        "duration_ms": 0.268,
+        "ok": false,
+        "attributes": {
+          "remaining": 0
+        }
+      }
+    ],
+    "background": null
+  }
+}

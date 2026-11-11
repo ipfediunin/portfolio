@@ -1,0 +1,540 @@
+{
+  "kind": "load",
+  "measured_at": "2026-11-06T18:34:57+00:00",
+  "environment": {
+    "machine": {
+      "cpu": "AMD Ryzen 5 7500F 6-Core Processor",
+      "logical_cpus": 12,
+      "memory_gb": 31.6,
+      "os": "Windows-11"
+    },
+    "docker": {
+      "engine": "Docker Desktop 29.2.1",
+      "cpus": 12,
+      "memory_gb": 15.4
+    },
+    "load_generator": "Locust 2.47.0 on the same machine",
+    "limits": [
+      {
+        "service": "edge",
+        "replicas": 1,
+        "cpus": 0.5,
+        "memory_mb": 128
+      },
+      {
+        "service": "kafka",
+        "replicas": 1,
+        "cpus": null,
+        "memory_mb": 768
+      },
+      {
+        "service": "ops-bot",
+        "replicas": 1,
+        "cpus": 0.25,
+        "memory_mb": 128
+      },
+      {
+        "service": "ops-bot-run",
+        "replicas": 1,
+        "cpus": 0.25,
+        "memory_mb": 128
+      },
+      {
+        "service": "order-worker",
+        "replicas": 2,
+        "cpus": 0.5,
+        "memory_mb": 192
+      },
+      {
+        "service": "orders-api",
+        "replicas": 1,
+        "cpus": 1.0,
+        "memory_mb": 256
+      },
+      {
+        "service": "outbox-relay",
+        "replicas": 1,
+        "cpus": 0.25,
+        "memory_mb": 128
+      },
+      {
+        "service": "payments",
+        "replicas": 1,
+        "cpus": 0.5,
+        "memory_mb": 256
+      },
+      {
+        "service": "payments-sweeper",
+        "replicas": 1,
+        "cpus": 0.1,
+        "memory_mb": 128
+      },
+      {
+        "service": "postgres",
+        "replicas": 1,
+        "cpus": null,
+        "memory_mb": null
+      },
+      {
+        "service": "provider-stub",
+        "replicas": 1,
+        "cpus": 0.25,
+        "memory_mb": 128
+      },
+      {
+        "service": "rabbitmq",
+        "replicas": 1,
+        "cpus": null,
+        "memory_mb": 512
+      },
+      {
+        "service": "realtime-hub",
+        "replicas": 2,
+        "cpus": 0.25,
+        "memory_mb": 128
+      },
+      {
+        "service": "redis",
+        "replicas": 1,
+        "cpus": null,
+        "memory_mb": null
+      }
+    ]
+  },
+  "profile": {
+    "spawn_rate": 10.0,
+    "wait_s": [0.2, 1.0],
+    "weights": {
+      "GET /api/orders/42": 4,
+      "GET /api/products/7": 4,
+      "POST /api/orders (422)": 1,
+      "POST /api/orders": 2,
+      "POST /api/reports": 1,
+      "POST /api/orders/42/pay": 1,
+      "GET /api/orders/42/checkout": 1,
+      "POST /webhooks/payments": 1
+    }
+  },
+  "runs": [
+    {
+      "users": 20,
+      "duration_s": 60,
+      "requests": 2242,
+      "failures": 0,
+      "rps": 37.4,
+      "p95": 150,
+      "endpoints": [
+        {
+          "name": "GET /api/orders/42",
+          "group": "read",
+          "requests": 449,
+          "failures": 0,
+          "rps": 7.5,
+          "p50": 5,
+          "p95": 8,
+          "p99": 9,
+          "max": 18.3
+        },
+        {
+          "name": "GET /api/orders/42/checkout",
+          "group": "payments",
+          "requests": 127,
+          "failures": 0,
+          "rps": 2.1,
+          "p50": 7,
+          "p95": 12,
+          "p99": 30,
+          "max": 60.9
+        },
+        {
+          "name": "GET /api/products/7",
+          "group": "read",
+          "requests": 459,
+          "failures": 0,
+          "rps": 7.6,
+          "p50": 4,
+          "p95": 6,
+          "p99": 8,
+          "max": 16.7
+        },
+        {
+          "name": "GET /api/traces/[id]",
+          "group": "traces",
+          "requests": 501,
+          "failures": 0,
+          "rps": 8.3,
+          "p50": 3,
+          "p95": 6,
+          "p99": 7,
+          "max": 8.2
+        },
+        {
+          "name": "POST /api/orders",
+          "group": "events",
+          "requests": 252,
+          "failures": 0,
+          "rps": 4.2,
+          "p50": 8,
+          "p95": 12,
+          "p99": 13,
+          "max": 15.6
+        },
+        {
+          "name": "POST /api/orders (422)",
+          "group": "read",
+          "requests": 125,
+          "failures": 0,
+          "rps": 2.1,
+          "p50": 4,
+          "p95": 6,
+          "p99": 9,
+          "max": 16.3
+        },
+        {
+          "name": "POST /api/orders/42/pay",
+          "group": "jobs",
+          "requests": 120,
+          "failures": 0,
+          "rps": 2.0,
+          "p50": 15,
+          "p95": 24,
+          "p99": 44,
+          "max": 45.0
+        },
+        {
+          "name": "POST /api/reports",
+          "group": "jobs",
+          "requests": 112,
+          "failures": 0,
+          "rps": 1.9,
+          "p50": 14,
+          "p95": 23,
+          "p99": 29,
+          "max": 37.3
+        },
+        {
+          "name": "POST /webhooks/payments",
+          "group": "payments",
+          "requests": 97,
+          "failures": 0,
+          "rps": 1.6,
+          "p50": 8,
+          "p95": 11,
+          "p99": 19,
+          "max": 19.0
+        }
+      ],
+      "background": [
+        {
+          "name": "order → Kafka → 3 groups",
+          "count": 251,
+          "failures": 0,
+          "p50": 150,
+          "p95": 260,
+          "p99": 270,
+          "max": 276.9
+        },
+        {
+          "name": "payment job → worker → provider",
+          "count": 120,
+          "failures": 0,
+          "p50": 19,
+          "p95": 34,
+          "p99": 55,
+          "max": 82.7
+        },
+        {
+          "name": "report job → worker",
+          "count": 114,
+          "failures": 0,
+          "p50": 18,
+          "p95": 28,
+          "p99": 32,
+          "max": 40.5
+        }
+      ],
+      "containers": [
+        {
+          "service": "edge",
+          "cpu_peak_pct": 1.8,
+          "memory_peak_mb": 16
+        },
+        {
+          "service": "kafka",
+          "cpu_peak_pct": 47.3,
+          "memory_peak_mb": 396
+        },
+        {
+          "service": "ops-bot",
+          "cpu_peak_pct": 15.4,
+          "memory_peak_mb": 96
+        },
+        {
+          "service": "ops-bot-run",
+          "cpu_peak_pct": 0.0,
+          "memory_peak_mb": 74
+        },
+        {
+          "service": "order-worker",
+          "cpu_peak_pct": 2.7,
+          "memory_peak_mb": 66
+        },
+        {
+          "service": "orders-api",
+          "cpu_peak_pct": 9.4,
+          "memory_peak_mb": 76
+        },
+        {
+          "service": "outbox-relay",
+          "cpu_peak_pct": 1.4,
+          "memory_peak_mb": 60
+        },
+        {
+          "service": "payments",
+          "cpu_peak_pct": 2.2,
+          "memory_peak_mb": 138
+        },
+        {
+          "service": "payments-sweeper",
+          "cpu_peak_pct": 0.1,
+          "memory_peak_mb": 59
+        },
+        {
+          "service": "postgres",
+          "cpu_peak_pct": 3.5,
+          "memory_peak_mb": 89
+        },
+        {
+          "service": "provider-stub",
+          "cpu_peak_pct": 18.6,
+          "memory_peak_mb": 54
+        },
+        {
+          "service": "rabbitmq",
+          "cpu_peak_pct": 165.0,
+          "memory_peak_mb": 145
+        },
+        {
+          "service": "realtime-hub",
+          "cpu_peak_pct": 5.3,
+          "memory_peak_mb": 54
+        },
+        {
+          "service": "redis",
+          "cpu_peak_pct": 3.6,
+          "memory_peak_mb": 11
+        }
+      ]
+    },
+    {
+      "users": 60,
+      "duration_s": 60,
+      "requests": 6737,
+      "failures": 0,
+      "rps": 112.3,
+      "p95": 140,
+      "endpoints": [
+        {
+          "name": "GET /api/orders/42",
+          "group": "read",
+          "requests": 1379,
+          "failures": 0,
+          "rps": 23.0,
+          "p50": 5,
+          "p95": 10,
+          "p99": 13,
+          "max": 24.4
+        },
+        {
+          "name": "GET /api/orders/42/checkout",
+          "group": "payments",
+          "requests": 371,
+          "failures": 0,
+          "rps": 6.2,
+          "p50": 8,
+          "p95": 13,
+          "p99": 43,
+          "max": 74.4
+        },
+        {
+          "name": "GET /api/products/7",
+          "group": "read",
+          "requests": 1377,
+          "failures": 0,
+          "rps": 22.9,
+          "p50": 4,
+          "p95": 8,
+          "p99": 10,
+          "max": 32.3
+        },
+        {
+          "name": "GET /api/traces/[id]",
+          "group": "traces",
+          "requests": 1493,
+          "failures": 0,
+          "rps": 24.9,
+          "p50": 4,
+          "p95": 7,
+          "p99": 10,
+          "max": 18.8
+        },
+        {
+          "name": "POST /api/orders",
+          "group": "events",
+          "requests": 708,
+          "failures": 0,
+          "rps": 11.8,
+          "p50": 8,
+          "p95": 13,
+          "p99": 16,
+          "max": 37.0
+        },
+        {
+          "name": "POST /api/orders (422)",
+          "group": "read",
+          "requests": 365,
+          "failures": 0,
+          "rps": 6.1,
+          "p50": 4,
+          "p95": 7,
+          "p99": 8,
+          "max": 33.0
+        },
+        {
+          "name": "POST /api/orders/42/pay",
+          "group": "jobs",
+          "requests": 370,
+          "failures": 0,
+          "rps": 6.2,
+          "p50": 16,
+          "p95": 25,
+          "p99": 32,
+          "max": 46.1
+        },
+        {
+          "name": "POST /api/reports",
+          "group": "jobs",
+          "requests": 357,
+          "failures": 0,
+          "rps": 5.9,
+          "p50": 15,
+          "p95": 24,
+          "p99": 28,
+          "max": 41.9
+        },
+        {
+          "name": "POST /webhooks/payments",
+          "group": "payments",
+          "requests": 317,
+          "failures": 0,
+          "rps": 5.3,
+          "p50": 7,
+          "p95": 13,
+          "p99": 38,
+          "max": 59.3
+        }
+      ],
+      "background": [
+        {
+          "name": "order → Kafka → 3 groups",
+          "count": 708,
+          "failures": 0,
+          "p50": 140,
+          "p95": 260,
+          "p99": 270,
+          "max": 275.6
+        },
+        {
+          "name": "payment job → worker → provider",
+          "count": 369,
+          "failures": 0,
+          "p50": 21,
+          "p95": 29,
+          "p99": 44,
+          "max": 51.9
+        },
+        {
+          "name": "report job → worker",
+          "count": 358,
+          "failures": 0,
+          "p50": 19,
+          "p95": 28,
+          "p99": 34,
+          "max": 52.7
+        }
+      ],
+      "containers": [
+        {
+          "service": "edge",
+          "cpu_peak_pct": 4.5,
+          "memory_peak_mb": 19
+        },
+        {
+          "service": "kafka",
+          "cpu_peak_pct": 155.7,
+          "memory_peak_mb": 460
+        },
+        {
+          "service": "ops-bot",
+          "cpu_peak_pct": 16.8,
+          "memory_peak_mb": 96
+        },
+        {
+          "service": "ops-bot-run",
+          "cpu_peak_pct": 0.6,
+          "memory_peak_mb": 73
+        },
+        {
+          "service": "order-worker",
+          "cpu_peak_pct": 6.8,
+          "memory_peak_mb": 67
+        },
+        {
+          "service": "orders-api",
+          "cpu_peak_pct": 38.7,
+          "memory_peak_mb": 79
+        },
+        {
+          "service": "outbox-relay",
+          "cpu_peak_pct": 2.8,
+          "memory_peak_mb": 60
+        },
+        {
+          "service": "payments",
+          "cpu_peak_pct": 6.6,
+          "memory_peak_mb": 140
+        },
+        {
+          "service": "payments-sweeper",
+          "cpu_peak_pct": 0.1,
+          "memory_peak_mb": 59
+        },
+        {
+          "service": "postgres",
+          "cpu_peak_pct": 15.6,
+          "memory_peak_mb": 100
+        },
+        {
+          "service": "provider-stub",
+          "cpu_peak_pct": 5.7,
+          "memory_peak_mb": 50
+        },
+        {
+          "service": "rabbitmq",
+          "cpu_peak_pct": 35.7,
+          "memory_peak_mb": 105
+        },
+        {
+          "service": "realtime-hub",
+          "cpu_peak_pct": 0.8,
+          "memory_peak_mb": 45
+        },
+        {
+          "service": "redis",
+          "cpu_peak_pct": 4.3,
+          "memory_peak_mb": 18
+        }
+      ]
+    }
+  ]
+}

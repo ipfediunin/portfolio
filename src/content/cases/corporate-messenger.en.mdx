@@ -1,0 +1,30 @@
+## Problem
+
+Employees of an organisation need a private channel that works inside their own network and does not depend on external services. That takes a client-server application of its own: a server that accepts connections and delivers messages, and clients at the workplaces.
+
+## Solution
+
+A messenger of the organisation's own, built on Python sockets: a central server holds TCP connections with the clients and forwards messages between them, and UDP is used where speed matters more than guaranteed delivery.
+
+## My role
+
+- Built a client-server application that exchanges messages over TCP connections with Python sockets.
+- Implemented connecting and disconnecting clients and passing messages through the server.
+- Organised the server's work with several simultaneous connections.
+- Implemented handling of network errors.
+- Used UDP for the network tasks where it fits.
+
+## Technical architecture
+
+A central server accepts client connections and keeps them open. A client sends a message to the server, and the server forwards it to the recipients over their connections. The server is the single point every message passes through, so access and delivery rules live in one place.
+
+## Implementation
+
+- **Connection lifecycle.** Connecting, exchanging data and closing are handled explicitly; a client dropping off must not bring the server down.
+- **Many connections at once.** The server serves several clients at the same time and keeps track of each connection's state.
+- **TCP and UDP for their purpose.** TCP guarantees delivery and order — the basis of messaging. UDP needs no connection or acknowledgements and fits tasks where speed matters more than guaranteed delivery.
+- **Network errors.** Broken connections and unreachable recipients are a normal situation, not an exception that stops the work.
+
+## Functional outcome
+
+Employees exchange messages through their own server inside the organisation's network. The server serves several clients at once and delivers messages to the connected recipients.

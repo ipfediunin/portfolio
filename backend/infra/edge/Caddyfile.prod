@@ -1,0 +1,72 @@
+# The public entry point in production (compose.prod.yaml), one server for everything:
+#   https://{$SITE_DOMAIN}      → the website (Next.js); www.{$SITE_DOMAIN} redirects there
+#   https://{$API_DOMAIN}       → the live backend
+# Caddy obtains the certificates from Let's Encrypt and renews them, and redirects HTTP to HTTPS.
+# The API has the same routes as in development (Caddyfile):
+#   /webhooks/*  → the Payments API (Django)
+#   /ws          → the realtime hub (WebSocket)
+#   /telegram/*  → the ops bot (Telegram's webhook, checked by its secret header)
+#   everything else → the Orders API (FastAPI)
+# The Payments API's /internal/ and /admin/ are not routed. No access log: visitor addresses are
+# not written anywhere.
+{
+	admin off
+	email {$ACME_EMAIL}
+}
+
+{$SITE_DOMAIN} {
+	encode zstd gzip
+
+	# Pages and the contact form's server action; nothing bigger is ever posted.
+	request_body {
+		max_size 1MB
+	}
+
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		X-Content-Type-Options nosniff
+		X-Frame-Options SAMEORIGIN
+		Referrer-Policy strict-origin-when-cross-origin
+		-Server
+	}
+
+	# Streamed pages (Suspense) go out as they render.
+	reverse_proxy site:3000 {
+		flush_interval -1
+	}
+}
+
+www.{$SITE_DOMAIN} {
+	redir https://{$SITE_DOMAIN}{uri} permanent
+}
+
+{$API_DOMAIN} {
+	encode zstd gzip
+
+	request_body {
+		max_size 16KB
+	}
+
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		X-Content-Type-Options nosniff
+		Referrer-Policy no-referrer
+		-Server
+	}
+
+	handle /webhooks/* {
+		reverse_proxy payments:8001
+	}
+
+	handle /ws {
+		reverse_proxy realtime-hub:8200
+	}
+
+	handle /telegram/* {
+		reverse_proxy ops-bot:8300
+	}
+
+	handle {
+		reverse_proxy orders-api:8000
+	}
+}

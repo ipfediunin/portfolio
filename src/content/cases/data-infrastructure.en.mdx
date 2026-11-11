@@ -1,0 +1,31 @@
+## Problem
+
+Application data is mixed. Orders and users are strict relations and transactions; similar documents are found by meaning; some data is read so often that going to the database every time is expensive. No single store fits all of that, and connections to several cloud services have to be set up so they are convenient and safe to manage.
+
+## Solution
+
+A data layer with a store for each kind of data — PostgreSQL for relational data, pgvector or Milvus for vector search, Redis for frequently read data — connected to backend applications through configuration rather than code.
+
+## My role
+
+- Designed the data structure.
+- Connected backend applications to cloud databases.
+- Worked with PostgreSQL for structured data.
+- Used vector stores — pgvector and Milvus.
+- Worked with Redis.
+- Set up how the components interact and managed the connection configuration.
+- Used cloud services.
+
+## Technical architecture
+
+Web Client → Backend Services → data layer: PostgreSQL for relational data, pgvector or Milvus for vector search, Redis as the cache, and cloud services. The backend decides which store fits a query.
+
+## Implementation
+
+- **A store for each job.** PostgreSQL for relations, constraints and transactions; pgvector for vector search next to relational data; Milvus as a dedicated vector store for large collections; Redis for fast access to frequently read data.
+- **Cache.** Redis serves frequently read data without a database round trip, and a limited entry lifetime keeps the cache from drifting away from the database for long.
+- **Configuration outside the code.** Connection addresses and settings come from the environment, so one application runs in different environments without code changes.
+
+## Functional outcome
+
+Backend applications work with cloud databases and stores, each used for its purpose: relational data, vector search and caching are kept apart, and connections are managed through configuration.

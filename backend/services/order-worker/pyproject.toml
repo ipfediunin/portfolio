@@ -1,0 +1,33 @@
+[project]
+name = "order-worker"
+version = "0.1.0"
+description = "Order worker: consumes report and payment jobs from RabbitMQ with retries and a dead-letter queue"
+readme = "README.md"
+authors = [
+    { name = "mipls", email = "feduninmichail@gmail.com" }
+]
+requires-python = ">=3.12"
+dependencies = [
+    "aio-pika>=10.2.2",
+    "aiokafka>=0.15.0",
+    "asyncpg>=0.32.0",
+    "contracts",
+    "httpx>=0.28.1",
+    "messaging",
+    "pydantic-settings>=2.16.2",
+    "redis[hiredis]>=8.1.0",
+    "sqlalchemy[asyncio]>=2.1.8",
+    "telemetry",
+]
+
+[project.scripts]
+order-worker = "order_worker.main:run"
+
+[build-system]
+requires = ["uv_build>=0.13.5,<0.14.0"]
+build-backend = "uv_build"
+
+[tool.uv.sources]
+contracts = { workspace = true }
+messaging = { workspace = true }
+telemetry = { workspace = true }

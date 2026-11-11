@@ -1,0 +1,190 @@
+{
+  "scenario": "fan-out",
+  "request": {
+    "method": "POST",
+    "path": "/api/orders",
+    "authorized": true,
+    "body": {
+      "product_id": "kb-7",
+      "quantity": 1,
+      "delivery": "standard"
+    }
+  },
+  "response": {
+    "status": 201,
+    "statusText": "Created",
+    "headers": {
+      "content-type": "application/json",
+      "x-trace-id": "5b9e96148a5df2c74120e492d21772a8",
+      "x-ratelimit-limit": "5",
+      "x-ratelimit-remaining": "4",
+      "server-timing": "rate_limit;dur=0.266;desc=\"EVALSHA token_buckets (client, ip)\", validate;dur=0.014;desc=\"OrderIn.model_validate_json\", handle;dur=0.002;desc=\"POST /api/orders\", db;dur=6.887;desc=\"WITH created AS (INSERT INTO orders.orders ), event AS (INSERT INTO orders.outb\", total;dur=7.939"
+    },
+    "body": {
+      "id": 4282,
+      "status": "created",
+      "product_id": "kb-7",
+      "quantity": 1,
+      "delivery": "standard",
+      "total": 89.0,
+      "currency": "EUR",
+      "created_at": "2026-11-06T18:35:21.627128Z",
+      "expires_at": "2026-11-06T19:05:21.627128Z"
+    }
+  },
+  "roundTripMs": 9.71,
+  "trace": {
+    "trace_id": "5b9e96148a5df2c74120e492d21772a8",
+    "method": "POST",
+    "path": "/api/orders",
+    "status": 201,
+    "duration_ms": 7.939,
+    "spans": [
+      {
+        "kind": "rate_limit",
+        "name": "EVALSHA token_buckets (client, ip)",
+        "service": "orders-api",
+        "start_ms": 0.565,
+        "duration_ms": 0.266,
+        "ok": true,
+        "attributes": {
+          "remaining": 4
+        }
+      },
+      {
+        "kind": "validate",
+        "name": "OrderIn.model_validate_json",
+        "service": "orders-api",
+        "start_ms": 0.911,
+        "duration_ms": 0.014,
+        "ok": true,
+        "attributes": {}
+      },
+      {
+        "kind": "handle",
+        "name": "POST /api/orders",
+        "service": "orders-api",
+        "start_ms": 0.933,
+        "duration_ms": 0.002,
+        "ok": true,
+        "attributes": {}
+      },
+      {
+        "kind": "db",
+        "name": "WITH created AS (INSERT INTO orders.orders \u2026), event AS (INSERT INTO orders.outbox \u2026) SELECT \u2026 FROM created",
+        "service": "orders-api",
+        "start_ms": 0.949,
+        "duration_ms": 6.887,
+        "ok": true,
+        "attributes": {}
+      }
+    ],
+    "background": {
+      "state": "done",
+      "spans": [
+        {
+          "kind": "publish",
+          "name": "produce orders.events (acks=all)",
+          "service": "outbox-relay",
+          "start_ms": 209.652,
+          "duration_ms": 6.105,
+          "ok": true,
+          "attributes": {
+            "partition": 1,
+            "offset": 1077,
+            "key": "4282"
+          }
+        },
+        {
+          "kind": "consume",
+          "name": "consume orders.events [notifications] p1",
+          "service": "order-worker",
+          "start_ms": 216.075,
+          "duration_ms": 0.002,
+          "ok": true,
+          "attributes": {
+            "group": "notifications",
+            "partition": 1,
+            "offset": 1077,
+            "worker": "cccefb3a28e6"
+          }
+        },
+        {
+          "kind": "notify",
+          "name": "EVALSHA notify_once (RPUSH notifications:<client> \u00b7 PUBLISH events:<client>)",
+          "service": "order-worker",
+          "start_ms": 216.114,
+          "duration_ms": 0.384,
+          "ok": true,
+          "attributes": {
+            "event": "order.created",
+            "group": "notifications"
+          }
+        },
+        {
+          "kind": "consume",
+          "name": "consume orders.events [analytics] p1",
+          "service": "order-worker",
+          "start_ms": 216.317,
+          "duration_ms": 0.002,
+          "ok": true,
+          "attributes": {
+            "group": "analytics",
+            "partition": 1,
+            "offset": 1077,
+            "worker": "cfd937549d54"
+          }
+        },
+        {
+          "kind": "db",
+          "name": "WITH first AS (INSERT INTO orders.processed_events \u2026 ON CONFLICT DO NOTHING) INSERT INTO orders.daily_sales \u2026 FROM first ON CONFLICT DO UPDATE",
+          "service": "order-worker",
+          "start_ms": 216.349,
+          "duration_ms": 5.386,
+          "ok": true,
+          "attributes": {
+            "group": "analytics"
+          }
+        },
+        {
+          "kind": "push",
+          "name": "ws.send order.created",
+          "service": "realtime-hub",
+          "start_ms": 216.699,
+          "duration_ms": 0.01,
+          "ok": true,
+          "attributes": {
+            "event": "order.created",
+            "connections": 1,
+            "hub": "b6de5dd580ea"
+          }
+        },
+        {
+          "kind": "consume",
+          "name": "consume orders.events [inventory] p1",
+          "service": "order-worker",
+          "start_ms": 216.822,
+          "duration_ms": 0.001,
+          "ok": true,
+          "attributes": {
+            "group": "inventory",
+            "partition": 1,
+            "offset": 1077,
+            "worker": "cfd937549d54"
+          }
+        },
+        {
+          "kind": "db",
+          "name": "WITH first AS (INSERT INTO orders.processed_events \u2026 ON CONFLICT DO NOTHING) INSERT INTO orders.reservations \u2026 FROM first",
+          "service": "order-worker",
+          "start_ms": 216.845,
+          "duration_ms": 4.686,
+          "ok": true,
+          "attributes": {
+            "group": "inventory"
+          }
+        }
+      ]
+    }
+  }
+}

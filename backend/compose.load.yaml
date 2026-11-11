@@ -1,0 +1,19 @@
+# Load tests only (scripts/run_load.py adds this file and removes it again after the run): lifts
+# the per-visitor rate limits, because one machine plays every visitor from one IP. A run then
+# measures the services, not the rate limiter. Never deploy with it.
+services:
+  orders-api:
+    environment:
+      ORDERS_API_CLIENT_RATE_LIMIT__CAPACITY: "1000000"
+      ORDERS_API_CLIENT_RATE_LIMIT__PER_SECOND: "1000000"
+      ORDERS_API_IP_RATE_LIMIT__CAPACITY: "1000000"
+      ORDERS_API_IP_RATE_LIMIT__PER_SECOND: "1000000"
+      ORDERS_API_SANDBOX_RATE_LIMIT__CAPACITY: "1000000"
+      ORDERS_API_SANDBOX_RATE_LIMIT__PER_SECOND: "1000000"
+      ORDERS_API_SANDBOX_ADMIN_RATE_LIMIT__CAPACITY: "1000000"
+      ORDERS_API_SANDBOX_ADMIN_RATE_LIMIT__PER_SECOND: "1000000"
+      ORDERS_API_TRACE_RATE_LIMIT__CAPACITY: "1000000"
+      ORDERS_API_TRACE_RATE_LIMIT__PER_SECOND: "1000000"
+  payments:
+    environment:
+      BACKOFFICE_WEBHOOKS_PER_MINUTE: "1000000"

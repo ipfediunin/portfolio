@@ -1,0 +1,30 @@
+## Problem
+
+Not every piece of work can be done while a client waits for an HTTP response: processing can take long, depend on external systems or touch several services. Done synchronously, one slow or unavailable component holds up the whole chain. The answer is an architecture where services exchange messages and work runs asynchronously.
+
+## Solution
+
+Services that exchange messages instead of waiting on each other: the API publishes a message and answers at once, and handlers do the work in the background — RabbitMQ shares tasks between workers, Kafka gives several consumers the same events.
+
+## My role
+
+- Designed how services interact through message brokers.
+- Organised messaging through RabbitMQ and worked with Apache Kafka.
+- Implemented background task processing and split system components by responsibility.
+- Used Redis and PostgreSQL as parts of such systems.
+- Analysed failures in processing and delivering events.
+
+## Technical architecture
+
+API → message broker → handler → database → notification. The API accepts the request and publishes a message; the work is done by handlers that scale independently of the API.
+
+## Implementation
+
+- **A queue and a log are different tools.** In a RabbitMQ queue a message goes to one handler and is removed once acknowledged — that is how work is shared out. In Kafka, events are kept in the topic's partitions, and each consumer group reads them from its own position and can read them again — that is how several independent consumers get the same event.
+- **Acknowledgements.** A message counts as processed only once acknowledged; if the handler dies before that, the message goes to another one.
+- **Order.** Kafka guarantees order within a partition, so events of one entity are published with one key.
+- **Redelivery.** Because of redeliveries a handler can receive a message twice — processing must cope with that.
+
+## Functional outcome
+
+Services exchange data through message brokers, and long-running work happens in the background: the API answers quickly, the load is spread across handlers, and events are available to every service that needs them.

@@ -1,0 +1,88 @@
+{
+  "scenario": "circuit-breaker",
+  "request": {
+    "method": "GET",
+    "path": "/api/orders/42/checkout",
+    "authorized": true,
+    "body": null,
+    "providerDown": true
+  },
+  "response": {
+    "status": 504,
+    "statusText": "Gateway Timeout",
+    "headers": {
+      "content-type": "application/json",
+      "x-trace-id": "824fa8b7ded20dcff05b16674a3148de",
+      "server-timing": "rate_limit;dur=0.261;desc=\"EVALSHA token_buckets (client, ip)\", handle;dur=0.012;desc=\"GET /api/orders/{id}/checkout\", total;dur=2041.354"
+    },
+    "body": {
+      "detail": "Payment provider failed: the provider did not answer in time"
+    }
+  },
+  "roundTripMs": 2043.43,
+  "trace": {
+    "trace_id": "824fa8b7ded20dcff05b16674a3148de",
+    "method": "GET",
+    "path": "/api/orders/42/checkout",
+    "status": 504,
+    "duration_ms": 2041.354,
+    "spans": [
+      {
+        "kind": "rate_limit",
+        "name": "EVALSHA token_buckets (client, ip)",
+        "service": "orders-api",
+        "start_ms": 1.007,
+        "duration_ms": 0.261,
+        "ok": true,
+        "attributes": {
+          "remaining": 4
+        }
+      },
+      {
+        "kind": "handle",
+        "name": "GET /api/orders/{id}/checkout",
+        "service": "orders-api",
+        "start_ms": 1.375,
+        "duration_ms": 0.012,
+        "ok": true,
+        "attributes": {}
+      },
+      {
+        "kind": "breaker",
+        "name": "EVALSHA circuit_breaker_acquire",
+        "service": "payments-api",
+        "start_ms": 4.076,
+        "duration_ms": 11.661,
+        "ok": true,
+        "attributes": {
+          "state": "closed",
+          "failures": 0
+        }
+      },
+      {
+        "kind": "external",
+        "name": "GET /v1/payment-methods",
+        "service": "payments-api",
+        "start_ms": 35.003,
+        "duration_ms": 2003.308,
+        "ok": false,
+        "attributes": {
+          "error": "timeout"
+        }
+      },
+      {
+        "kind": "breaker",
+        "name": "EVALSHA circuit_breaker_record",
+        "service": "payments-api",
+        "start_ms": 2038.356,
+        "duration_ms": 0.333,
+        "ok": true,
+        "attributes": {
+          "state": "closed",
+          "failures": 1
+        }
+      }
+    ],
+    "background": null
+  }
+}

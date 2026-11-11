@@ -1,0 +1,33 @@
+## Problem
+
+An organisation's knowledge is spread across documents: policies, instructions, process descriptions. Keyword search handles this poorly: the question and the document use different words, and the file it finds still has to be read through. The goal was a system that takes a question in natural language and answers it from the organisation's own sources rather than from the language model's general knowledge.
+
+## Solution
+
+A retrieval-augmented generation (RAG) service. Documents are indexed as vector fragments that keep a reference to their source; a question is matched against them by meaning, and the language model answers only from the closest fragments, so every answer can be traced back to its documents.
+
+## My role
+
+- Designed the RAG pipeline: preparing and indexing documents, retrieving context and producing the answer.
+- Built the backend API with FastAPI for questions and for working with the index.
+- Implemented splitting documents into meaningful fragments and storing the fragments with their metadata.
+- Implemented search over vector representations of documents with pgvector and Milvus.
+- Integrated the language model and organised how the retrieved context is passed to it.
+- Added Redis for caching, so repeated operations are not performed again.
+
+## Technical architecture
+
+- **Indexing.** Documents are cleaned and split into fragments, embeddings are computed for the fragments, and the vectors are stored together with their metadata.
+- **Answering a question.** The API checks the cache, turns the question into a vector, finds the closest fragments and hands them to the language model as context.
+- **Vector stores.** pgvector keeps vectors next to relational data in PostgreSQL, so search combines with ordinary SQL filters. Milvus is a dedicated vector database with indexes for approximate search over large collections.
+
+## Implementation
+
+- **Fragments.** Fragment size is a trade-off: a large fragment blurs the meaning of its vector, a small one loses context. Overlapping neighbours keep a thought that a boundary would cut in two.
+- **Relevance.** Only the closest fragments go into the context. Low similarity is a sign that the answer is not in the base, and the model should not invent one.
+- **Request context.** The number of fragments is limited, so the answer stays precise and the request fits the model's context.
+- **Metadata.** Each fragment keeps a reference to its source document, so an answer can be checked against its source.
+
+## Functional outcome
+
+The system lets people ask questions about internal documents in natural language and get answers grounded in the fragments found, with links to the sources. Adding new knowledge only takes indexing the documents; the model does not need to be retrained.

@@ -1,0 +1,100 @@
+{
+  "scenario": "webhook",
+  "request": {
+    "method": "POST",
+    "path": "/webhooks/payments",
+    "authorized": true,
+    "body": {
+      "id": "evt_8f3a",
+      "type": "payment.succeeded",
+      "data": {
+        "order_id": 42
+      }
+    },
+    "signed": true
+  },
+  "response": {
+    "status": 200,
+    "statusText": "OK",
+    "headers": {
+      "content-type": "application/json",
+      "x-trace-id": "92297025ffc86a6edd718a74a9265fad",
+      "server-timing": "auth;dur=0.316;desc=\"GET sandbox:<token sha256>\", rate_limit;dur=0.293;desc=\"INCR webhooks:<client>:<minute>\", validate;dur=0.038;desc=\"WebhookEvent.model_validate_json\", handle;dur=0.041;desc=\"verify HMAC-SHA256 signature\", db;dur=2.144;desc=\"INSERT INTO backoffice.webhook_events (owner_key, event_id, type, order_id, rece\", db;dur=2.846;desc=\"INSERT INTO backoffice.payments AS p (owner_key, order_id, status, last_event_id\", total;dur=16.642"
+    },
+    "body": {
+      "received": true,
+      "status": "succeeded"
+    }
+  },
+  "roundTripMs": 19.9,
+  "trace": {
+    "trace_id": "92297025ffc86a6edd718a74a9265fad",
+    "method": "POST",
+    "path": "/webhooks/payments",
+    "status": 200,
+    "duration_ms": 16.642,
+    "spans": [
+      {
+        "kind": "auth",
+        "name": "GET sandbox:<token sha256>",
+        "service": "payments-api",
+        "start_ms": 0.194,
+        "duration_ms": 0.316,
+        "ok": true,
+        "attributes": {
+          "sandbox": "valid"
+        }
+      },
+      {
+        "kind": "rate_limit",
+        "name": "INCR webhooks:<client>:<minute>",
+        "service": "payments-api",
+        "start_ms": 0.556,
+        "duration_ms": 0.293,
+        "ok": true,
+        "attributes": {
+          "count": 1
+        }
+      },
+      {
+        "kind": "validate",
+        "name": "WebhookEvent.model_validate_json",
+        "service": "payments-api",
+        "start_ms": 0.899,
+        "duration_ms": 0.038,
+        "ok": true,
+        "attributes": {}
+      },
+      {
+        "kind": "handle",
+        "name": "verify HMAC-SHA256 signature",
+        "service": "payments-api",
+        "start_ms": 0.951,
+        "duration_ms": 0.041,
+        "ok": true,
+        "attributes": {
+          "verdict": "valid"
+        }
+      },
+      {
+        "kind": "db",
+        "name": "INSERT INTO backoffice.webhook_events (owner_key, event_id, type, order_id, received_at, expires_at) VALUES (%s, %s, %s, %s, now(), now() + make_interval(secs => %s)) ON CONFLICT (owner_key, event_id)",
+        "service": "payments-api",
+        "start_ms": 8.47,
+        "duration_ms": 2.144,
+        "ok": true,
+        "attributes": {}
+      },
+      {
+        "kind": "db",
+        "name": "INSERT INTO backoffice.payments AS p (owner_key, order_id, status, last_event_id, created_at, updated_at, expires_at) VALUES (%s, %s, %s, %s, now(), now(), now() + make_interval(secs => %s)) ON CONFLI",
+        "service": "payments-api",
+        "start_ms": 10.658,
+        "duration_ms": 2.846,
+        "ok": true,
+        "attributes": {}
+      }
+    ],
+    "background": null
+  }
+}

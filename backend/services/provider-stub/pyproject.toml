@@ -1,0 +1,25 @@
+[project]
+name = "provider-stub"
+version = "0.1.0"
+description = "A local stand-in for an external payment provider, with idempotency keys and fault injection"
+readme = "README.md"
+authors = [
+    { name = "mipls", email = "feduninmichail@gmail.com" }
+]
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.162.0",
+    "pydantic-settings>=2.16.2",
+    "telemetry",
+    "uvicorn[standard]>=0.54.0",
+]
+
+[project.scripts]
+provider-stub = "provider_stub.main:run"
+
+[build-system]
+requires = ["uv_build>=0.13.5,<0.14.0"]
+build-backend = "uv_build"
+
+[tool.uv.sources]
+telemetry = { workspace = true }

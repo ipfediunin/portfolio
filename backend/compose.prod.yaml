@@ -1,0 +1,188 @@
+# Production on a single VPS (the website and the live backend), on top of compose.yaml:
+#   docker compose -f compose.yaml -f compose.prod.yaml up -d --build
+# What changes for production:
+# - the website (Next.js, the repository root's Dockerfile) runs as the "site" service;
+# - the edge serves https://$SITE_DOMAIN (the website, www redirects there) and https://$API_DOMAIN
+#   on ports 80/443; Caddy obtains and renews the certificates (its data lives in a volume, so a
+#   restart does not ask Let's Encrypt again);
+# - no store, broker or test port is published on the host; the Django admin stays on
+#   127.0.0.1:8001, for the owner through an SSH tunnel;
+# - no development default for any secret: each must be set in .env, or compose refuses to start;
+# - the stores restart with the machine; the ops bot takes Telegram's webhook through the edge.
+# Never add compose.load.yaml here: it lifts the rate limits for load tests.
+
+x-database-url: &database-url postgresql+asyncpg://runtime:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}@postgres:5432/runtime_city
+x-amqp-url: &amqp-url amqp://runtime:${RABBITMQ_PASSWORD:?set RABBITMQ_PASSWORD in .env}@rabbitmq:5672/runtime_city
+x-internal-token: &internal-token ${INTERNAL_TOKEN:?set INTERNAL_TOKEN in .env}
+# The website's origin: the only page allowed to call the API and open sockets.
+x-site-origins: &site-origins '["https://${SITE_DOMAIN:?set SITE_DOMAIN (the website, e.g. example.com) in .env}"]'
+
+x-orders-api-env: &orders-api-env
+  ORDERS_API_DATABASE_URL: *database-url
+  ORDERS_API_AMQP_URL: *amqp-url
+  ORDERS_API_INTERNAL_TOKEN: *internal-token
+  ORDERS_API_IP_HASH_SECRET: ${ORDERS_API_IP_HASH_SECRET:?set ORDERS_API_IP_HASH_SECRET in .env}
+  ORDERS_API_CORS_ORIGINS: *site-origins
+
+x-backoffice-env: &backoffice-env
+  BACKOFFICE_DATABASE_URL: postgresql://runtime:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}@postgres:5432/runtime_city
+  BACKOFFICE_INTERNAL_TOKEN: *internal-token
+  BACKOFFICE_SECRET_KEY: ${BACKOFFICE_SECRET_KEY:?set BACKOFFICE_SECRET_KEY in .env}
+  BACKOFFICE_CORS_ORIGINS: https://${SITE_DOMAIN:?set SITE_DOMAIN in .env}
+  # The admin is reached only through an SSH tunnel to 127.0.0.1:8001 (plain HTTP on the tunnel).
+  BACKOFFICE_INSECURE_COOKIES: "1"
+
+x-ops-bot-env: &ops-bot-env
+  OPS_BOT_DATABASE_URL: *database-url
+  OPS_BOT_AMQP_URL: *amqp-url
+  OPS_BOT_TRANSPORT: webhook
+  OPS_BOT_PUBLIC_URL: https://${API_DOMAIN:?set API_DOMAIN in .env}
+
+x-restart: &restart
+  restart: unless-stopped
+
+# Anchors do not cross files: the same hardening as the application containers in compose.yaml.
+x-hardened: &hardened
+  read_only: true
+  tmpfs:
+    - /tmp
+  security_opt:
+    - no-new-privileges:true
+  restart: unless-stopped
+
+services:
+  postgres:
+    <<: *restart
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+    ports: !reset []
+
+  redis:
+    <<: *restart
+    ports: !reset []
+
+  rabbitmq:
+    <<: *restart
+    environment:
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:?set RABBITMQ_PASSWORD in .env}
+    ports: !reset []
+
+  kafka:
+    <<: *restart
+    environment:
+      # Only the compose network: no listener for tools on the host.
+      KAFKA_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT
+    ports: !reset []
+
+  orders-api-migrate:
+    environment: *orders-api-env
+
+  orders-api:
+    environment: *orders-api-env
+
+  outbox-relay:
+    environment: *orders-api-env
+
+  order-worker:
+    environment:
+      ORDER_WORKER_DATABASE_URL: *database-url
+      ORDER_WORKER_AMQP_URL: *amqp-url
+
+  realtime-hub:
+    environment:
+      REALTIME_HUB_ALLOWED_ORIGINS: *site-origins
+
+  payments-migrate:
+    environment: *backoffice-env
+
+  payments:
+    environment: *backoffice-env
+
+  payments-sweeper:
+    environment: *backoffice-env
+
+  ops-bot:
+    environment: *ops-bot-env
+
+  ops-bot-run:
+    environment: *ops-bot-env
+
+  # The website. Public settings are build args (inlined into the bundle: change → rebuild);
+  # empty ones are simply not shown on the site.
+  site:
+    <<: *hardened
+    image: runtime-city/site:local
+    build:
+      context: ..
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_SITE_URL: https://${SITE_DOMAIN:?set SITE_DOMAIN in .env}
+        NEXT_PUBLIC_LIVE_API_URL: https://${API_DOMAIN:?set API_DOMAIN in .env}
+        NEXT_PUBLIC_SITE_INDEXABLE: ${NEXT_PUBLIC_SITE_INDEXABLE:-true}
+        NEXT_PUBLIC_OWNER_NAME: ${NEXT_PUBLIC_OWNER_NAME:-}
+        NEXT_PUBLIC_OWNER_AGE: ${NEXT_PUBLIC_OWNER_AGE:-}
+        NEXT_PUBLIC_OWNER_PHOTO: ${NEXT_PUBLIC_OWNER_PHOTO:-}
+        NEXT_PUBLIC_CONTACT_EMAIL: ${NEXT_PUBLIC_CONTACT_EMAIL:-}
+        NEXT_PUBLIC_GITHUB_URL: ${NEXT_PUBLIC_GITHUB_URL:-}
+        NEXT_PUBLIC_LINKEDIN_URL: ${NEXT_PUBLIC_LINKEDIN_URL:-}
+        NEXT_PUBLIC_TELEGRAM_URL: ${NEXT_PUBLIC_TELEGRAM_URL:-}
+        NEXT_PUBLIC_SCHEDULING_URL: ${NEXT_PUBLIC_SCHEDULING_URL:-}
+        NEXT_PUBLIC_RESUME_URL: ${NEXT_PUBLIC_RESUME_URL:-}
+        NEXT_PUBLIC_PLAUSIBLE_DOMAIN: ${NEXT_PUBLIC_PLAUSIBLE_DOMAIN:-}
+        NEXT_PUBLIC_PLAUSIBLE_SCRIPT_URL: ${NEXT_PUBLIC_PLAUSIBLE_SCRIPT_URL:-}
+        TELEGRAM_CHAT_ID: ${CONTACT_TELEGRAM_CHAT_ID:-}
+      secrets:
+        - contact_telegram_bot_token
+    environment:
+      # The contact form's bot (its own, not the ops bot): the server action sends with it.
+      TELEGRAM_BOT_TOKEN: ${CONTACT_TELEGRAM_BOT_TOKEN:-}
+      TELEGRAM_CHAT_ID: ${CONTACT_TELEGRAM_CHAT_ID:-}
+    volumes:
+      - site-cache:/app/.next/cache
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "fetch('http://127.0.0.1:3000/robots.txt').then((r) => process.exit(r.ok ? 0 : 1), () => process.exit(1))"
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 20s
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 512M
+
+  edge:
+    depends_on:
+      site:
+        condition: service_healthy
+    environment:
+      SITE_DOMAIN: ${SITE_DOMAIN:?set SITE_DOMAIN in .env}
+      API_DOMAIN: ${API_DOMAIN:?set API_DOMAIN in .env}
+      # Let's Encrypt writes here about expiring certificates.
+      ACME_EMAIL: ${ACME_EMAIL:?set ACME_EMAIL in .env}
+    volumes: !override
+      - ./infra/edge/Caddyfile.prod:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    tmpfs: !override
+      - /tmp
+    ports: !override
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+
+volumes:
+  caddy-data:
+  caddy-config:
+  site-cache:
+
+secrets:
+  # Read from .env like every other value; empty: the site is built without the contact form.
+  contact_telegram_bot_token:
+    environment: CONTACT_TELEGRAM_BOT_TOKEN

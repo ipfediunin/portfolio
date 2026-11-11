@@ -1,0 +1,82 @@
+{
+  "scenario": "sync-read",
+  "request": {
+    "method": "GET",
+    "path": "/api/orders/42",
+    "authorized": true,
+    "body": null
+  },
+  "response": {
+    "status": 200,
+    "statusText": "OK",
+    "headers": {
+      "content-type": "application/json",
+      "x-trace-id": "85fa3323a4daf0be300b9c5ccb03dd5e",
+      "x-ratelimit-limit": "5",
+      "x-ratelimit-remaining": "4",
+      "server-timing": "rate_limit;dur=0.233;desc=\"EVALSHA token_buckets (client, ip)\", auth;dur=0.186;desc=\"GET sandbox:<token sha256>\", handle;dur=0.000;desc=\"GET /api/orders/{id}\", db;dur=4.794;desc=\"SELECT o.id, o.status, p.sku AS product_id, o.quantity, o.delivery, o.total_cent\", total;dur=6.255"
+    },
+    "body": {
+      "id": 42,
+      "status": "paid",
+      "product_id": "dk-9",
+      "quantity": 1,
+      "delivery": "express",
+      "total": 129.9,
+      "currency": "EUR",
+      "created_at": "2026-11-04T20:10:27.024124Z",
+      "expires_at": null
+    }
+  },
+  "roundTripMs": 7.89,
+  "trace": {
+    "trace_id": "85fa3323a4daf0be300b9c5ccb03dd5e",
+    "method": "GET",
+    "path": "/api/orders/42",
+    "status": 200,
+    "duration_ms": 6.255,
+    "spans": [
+      {
+        "kind": "rate_limit",
+        "name": "EVALSHA token_buckets (client, ip)",
+        "service": "orders-api",
+        "start_ms": 0.647,
+        "duration_ms": 0.233,
+        "ok": true,
+        "attributes": {
+          "remaining": 4
+        }
+      },
+      {
+        "kind": "auth",
+        "name": "GET sandbox:<token sha256>",
+        "service": "orders-api",
+        "start_ms": 0.946,
+        "duration_ms": 0.186,
+        "ok": true,
+        "attributes": {
+          "token": "valid"
+        }
+      },
+      {
+        "kind": "handle",
+        "name": "GET /api/orders/{id}",
+        "service": "orders-api",
+        "start_ms": 1.21,
+        "duration_ms": 0.0,
+        "ok": true,
+        "attributes": {}
+      },
+      {
+        "kind": "db",
+        "name": "SELECT o.id, o.status, p.sku AS product_id, o.quantity, o.delivery, o.total_cents, o.currency, o.created_at, o.expires_at FROM orders.orders o JOIN orders.product_snapshots p ON p.id = o.product_id WH",
+        "service": "orders-api",
+        "start_ms": 1.369,
+        "duration_ms": 4.794,
+        "ok": true,
+        "attributes": {}
+      }
+    ],
+    "background": null
+  }
+}

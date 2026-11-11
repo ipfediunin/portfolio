@@ -1,0 +1,11 @@
+.next
+out
+build
+coverage
+public
+package-lock.json
+next-env.d.ts
+# Managed by `next dev`; reformatting it causes churn.
+AGENTS.md
+# The Python backend is formatted by ruff; only its fixtures (JSON) are written by a script.
+backend

@@ -1,0 +1,31 @@
+## Problem
+
+Numerical data rarely arrives ready for analysis: values are missing, outliers occur, and measurements are taken at a step that differs from the one needed. To compute, compare and draw conclusions, the data has to be prepared, the values in between restored, and the result presented so that it can be checked.
+
+## Solution
+
+Python processing tools built as a pipeline of separate steps — loading, cleaning, computation and interpolation, plots — so each step can be checked on its own and the interpolation method can be chosen to fit the data.
+
+## My role
+
+- Built Python tools for importing and preparing datasets.
+- Implemented data cleaning and transformation with Pandas.
+- Worked with NumPy arrays and numerical methods.
+- Implemented numerical processing with SciPy's interpolation methods.
+- Built Matplotlib plots that compare the original and the processed values.
+- Prepared the results of the analysis.
+
+## Technical architecture
+
+Processing is a pipeline of separate steps: loading → cleaning → arrays → computation and interpolation → visualisation → report. Each step takes and returns data in a clear format, so it can be checked and replaced independently of the others.
+
+## Implementation
+
+- **Preparing the data.** Gaps and outliers are handled before any computation: interpolating dirty data reproduces the measurement errors.
+- **Choosing the method.** Linear interpolation is simple and predictable, a cubic spline gives a smooth curve, monotone PCHIP adds no false oscillations at sharp transitions, and a high-degree polynomial on an even grid swings near the ends — Runge's phenomenon.
+- **Checking the result.** Original and restored values are compared on plots and by error metrics.
+- **Working with arrays.** Computations run over whole NumPy arrays.
+
+## Functional outcome
+
+The tools load a dataset, clean it, restore the values in between with the chosen method and produce plots that show how the processed values relate to the original ones.

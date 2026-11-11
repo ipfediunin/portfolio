@@ -1,0 +1,34 @@
+# The one public entry point (compose service `edge`). Routes by path:
+#   /webhooks/*  → the Payments API (Django): providers report payments here
+#   /ws          → the realtime hub (WebSocket; Caddy passes the upgrade through, either replica)
+#   /telegram/*  → the ops bot (Flask): Telegram's webhook, checked by its secret header
+#   everything else → the Orders API (FastAPI)
+# The Payments API's /internal/ and /admin/ are not routed: only the Orders API and the owner
+# (on 127.0.0.1:8001) reach them. No access log: visitor addresses are not written anywhere.
+# In production this block gets the site's domain and Caddy obtains the TLS certificate.
+{
+	admin off
+	auto_https off
+}
+
+:8000 {
+	request_body {
+		max_size 16KB
+	}
+
+	handle /webhooks/* {
+		reverse_proxy payments:8001
+	}
+
+	handle /ws {
+		reverse_proxy realtime-hub:8200
+	}
+
+	handle /telegram/* {
+		reverse_proxy ops-bot:8300
+	}
+
+	handle {
+		reverse_proxy orders-api:8000
+	}
+}

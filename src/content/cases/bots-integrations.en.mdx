@@ -1,0 +1,31 @@
+## Problem
+
+Many everyday tasks are easier in a messenger than in a separate application: checking a status, sending a report, asking a question. That takes a bot that understands commands, guides the user through multi-step scenarios, calls external services and stores the result.
+
+## Solution
+
+Messenger bots with a Flask backend: commands arrive by webhook, multi-step scenarios run as finite-state machines with the dialog state in Redis, and the bots call external APIs, store results in PostgreSQL and pass free-text questions to a language model.
+
+## My role
+
+- Designed the bots' logic and the handling of user commands.
+- Built the backend handlers with Flask.
+- Integrated third-party APIs.
+- Built automated scenarios and worked with the data.
+- Kept dialog state and results in Redis and PostgreSQL.
+- Added AI features through an LLM API.
+
+## Technical architecture
+
+User → messenger platform → Flask webhook → command handler → external API, LLM or database → reply to the user. The dialog state lives apart from the handler, in Redis, so every message is handled with the previous steps in mind.
+
+## Implementation
+
+- **Commands and scenarios.** Simple commands answer at once, while multi-step scenarios are built as a finite-state machine: at every step the bot knows what it expects from the user.
+- **External APIs.** An unavailable external service is no reason to stay silent: the user gets a clear answer.
+- **An LLM for free text.** Questions outside the commands go to a language model.
+- **Data.** Scenario results are stored in the database, not only in the chat history.
+
+## Functional outcome
+
+The bots get users' tasks done right in the messenger: they answer commands, guide through multi-step scenarios, fetch data from external systems and store the results.

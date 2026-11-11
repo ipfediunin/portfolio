@@ -1,0 +1,15 @@
+# Python environment and tool caches (uv.lock is committed)
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Local environment
+.env
+.env.*
+!.env.example
+!.env.production.example
